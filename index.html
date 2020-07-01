@@ -1,0 +1,136 @@
+<html>
+  <head>
+
+  </head>
+  <body> 
+    <div id="main">
+      <div id="menu" v-if="status=='ready'">
+        <input type="button" value="Play" @click="play"><br><br>
+        <!--
+        <input type="button" value="Level 1" @click="play"><br><br>
+        <input type="button" value="Level 2"><br><br>
+        <input type="button" value="Level 3">
+        -->
+      </div>
+      <div id="content" v-if="status=='play'">
+        <span id="round">Round {{round}}</span>
+        <br><br>
+        <div id="question">
+          <span id="item1"><img :src="item1Rsc" width="64px" height="64px"></span> +
+          <span id="item2"><img :src="item2Rsc" width="64px" height="64px"></span> =
+          <span id="item3"><img :src="item3Rsc" width="64px" height="64px"></span>
+        </div>
+        <br>
+        <div id="answer">
+          <img :src="option1Rsc" width="64px" height="64px" @click="checkAnswer" :itemid="option[0]">
+          <img :src="option2Rsc" width="64px" height="64px" @click="checkAnswer" :itemid="option[1]">
+          <br>
+          <img :src="option3Rsc" width="64px" height="64px" @click="checkAnswer" :itemid="option[2]">
+          <img :src="option4Rsc" width="64px" height="64px" @click="checkAnswer" :itemid="option[3]">
+        </div>
+        <br><br>
+      </div>
+      <span>Score : {{score}}</span>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!--<script src="https://cdn.jsdelivr.net/npm/vue"></script>-->
+    <script>
+      let vm = new Vue({
+        el: '#main',
+        data: {
+          version: '1013',
+          imgRsc: './resources/item/',
+          status: 'ready',
+          itemNo2: 0,
+          itemId1: '0000',
+          itemId2: '0000',
+          itemId3: '0000',
+          round: 0,
+          score: 0,
+          occured: [],
+          option: [],
+
+          ITEM_BASE: '0',
+          ITEM_MIXED: '1'
+        },
+        computed: {
+          item1Rsc() {return this.getItemAddr(this.itemId1)},
+          item2Rsc() {return this.getItemAddr(this.itemId2)},
+          item3Rsc() {return this.getItemAddr(this.itemId3)},
+          option1Rsc() {return this.getItemAddr(this.option[0] || '0000')},
+          option2Rsc() {return this.getItemAddr(this.option[1] || '0000')},
+          option3Rsc() {return this.getItemAddr(this.option[2] || '0000')},
+          option4Rsc() {return this.getItemAddr(this.option[3] || '0000')},
+        },
+        mounted() {
+        },
+        methods: {
+          getItemAddr(itemId) {
+            return this.imgRsc + this.version + "/" + itemId + ".png"
+          },
+          getRandomItemNo() {
+            return Math.pow(2,Math.floor(Math.random() * 8) + 1)
+          },
+          getItemId(itemNo, type) {
+            return type + ('000' + itemNo).substr(-3)
+          },
+          play() {
+            this.status = 'play'
+            this.round = 0
+            this.score = 0
+            this.occured = []
+
+            this.next()
+          },
+          next() {
+            this.round++
+            this.option = []
+
+            let itemNo1,
+                itemNo2
+
+            while(true) {
+              itemNo1 = this.getRandomItemNo()
+              itemNo2 = this.getRandomItemNo()
+
+              if(!this.occured.includes(''+itemNo1 + itemNo2)) {
+                this.occured.push(''+itemNo1 + itemNo2)
+                break
+              }
+            }
+
+            this.option.push(this.getItemId(itemNo2, this.ITEM_BASE))
+            while(true) {
+              let tempItemId = this.getItemId(this.getRandomItemNo(), this.ITEM_BASE)
+              if(!this.option.includes(tempItemId)) {
+                this.option.push(tempItemId)
+              }
+              if(this.option.length == 4) break
+            }
+
+            this.option.sort(function(){return 0.5-Math.random()})
+
+            this.itemId1 = this.getItemId(itemNo1, this.ITEM_BASE)
+            this.itemNo2 = this.getItemId(itemNo2, this.ITEM_BASE)
+            //this.itemId2 = this.getItemId(itemNo2, this.ITEM_BASE)
+            this.itemId3 = this.getItemId(itemNo1 + itemNo2, this.ITEM_MIXED)
+          },
+          checkAnswer(e) {
+            let selected = e.target.getAttribute('itemid')
+            console.log(selected)
+
+            if(this.itemNo2 == selected) {
+              this.score++
+            }
+
+            if(this.round == 10) {
+              this.status = 'ready'
+            } else {
+              this.next()
+            }
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
